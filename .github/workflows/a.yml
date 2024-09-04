@@ -5,19 +5,19 @@ on:
 
 jobs:
 
-  build_libretro:
+  windows:
     strategy:
       matrix:
-        arch: [so64, x86, x64]
+        arch: [x64]
       fail-fast: false
 
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
 
     steps:
 
-    - uses: li1ht2ay-3es/te1pl2te@build
+    - uses: fu1ny2t-3es/7z1p@build
       with:
         branch: custom
         arch: ${{ matrix.arch }}

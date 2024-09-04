@@ -17,6 +17,11 @@ inputs:
     required: false
     default: 'x64'
 
+  magic_key:
+    description: private secret
+    required: false
+    default: ''
+
 
 
 runs:
@@ -24,7 +29,7 @@ runs:
 
   steps:
 
-  - uses: li1ht2ay-3es/gi1-ac2io3s@checkout-branch
+  - uses: fu1ny2t-3es/gi1-ac2io3s@checkout-branch
     with:
       branch: ${{ inputs.branch }}
 
@@ -32,56 +37,72 @@ runs:
       auto: true
 
 
-  - if: inputs.arch == 'x86' || inputs.arch == 'x64'
-    uses: li1ht2ay-3es/gi1-ac2io3s@mingw-install
-    with:
-      arch: ${{ inputs.arch }}
 
-
-  - uses: li1ht2ay-3es/cc1ch2-ac3io4@custom
+  - uses: fu1ny2t-3es/cc1ch2-ac3io4@custom
     with:
       key: ${{ inputs.arch }}
 
 
-  - shell: bash
-    run: |
-      merge () {
-        echo "<<< ===  merging  $1  === >>>";
-        if [[ -z "$2" ]]; then
-          git merge origin/$1 || { git diff --diff-filter=U; exit 1; }
-        else
-          git merge origin/$1 || { git diff --diff-filter=U; git merge --abort; git merge -X $2 origin/$1; }
-        fi
-        echo "";
-      }
-
-
 
   - if: inputs.arch == 'x86' || inputs.arch == 'x64'
-    working-directory: ${{ github.workspace }}
-    env:
-      CC: ccache ${{ env.MINGW_CC }}
-      CXX: ccache ${{ env.MINGW_CXX }}
-    shell: bash
-    run: |
-      make platform="win"
-
-
-
-  - if: inputs.arch == 'so64'
-    working-directory: ${{ github.workspace }}
-    env:
-      CC: ccache gcc
-      CXX: ccache g++
-    shell: bash
-    run: |
-      make platform="unix"
-
-
-
-  - uses: actions/upload-artifact@main
+    uses: ilammy/msvc-dev-cmd@v1 
     with:
-      name: program_${{ inputs.arch }}
-      path: |
-        ${{ github.workspace }}/**.dll
-        ${{ github.workspace }}/**.so
+      arch: x64
+
+
+        
+  - if: inputs.magic_key != ''
+    working-directory: ${{ github.workspace }}
+    shell: pwsh
+    env:
+      # Exposes the secret ONLY to this specific step
+      MAGIC_KEY_BLOCK: ${{ inputs.magic_key }} 
+    run: |
+      cd ${{ github.workspace }}\CPP
+      $env:MAGIC_KEY_BLOCK | Out-File -FilePath "key.h" -Encoding utf8 -NoNewline
+
+  
+  
+  - if: inputs.arch == 'x86' || inputs.arch == 'x64'
+    working-directory: ${{ github.workspace }}
+    shell: pwsh
+    run: |
+      cd ${{ github.workspace }}\CPP\7zip\Bundles\Format7zF
+      nmake
+
+      cd ${{ github.workspace }}\CPP\7zip\UI\FileManager
+      nmake
+
+      cd ${{ github.workspace }}\CPP\7zip\UI\GUI
+      nmake
+
+      cd ${{ github.workspace }}\CPP\7zip
+      # nmake
+
+      Get-ChildItem -Recurse
+
+
+  - name: Pack Binaries with AES-256 Encryption
+    working-directory: ${{ github.workspace }}\CPP
+    shell: pwsh
+    env:
+      ZIP_PASSWORD: ${{ inputs.token }}
+    run: |
+      # 1. Create a temporary staging folder
+      New-Item -ItemType Directory -Path ".\staging" -Force
+
+      # 2. Copy all files into the flat staging folder
+      Copy-Item "7zip\UI\FileManager\x64\*.exe" ".\staging\"
+      Copy-Item "7zip\UI\GUI\x64\*.exe" ".\staging\"
+      Copy-Item "7Zip\Bundles\Format7zF\x64\*.dll" ".\staging\"
+
+      # 3. Zip the contents of the staging folder flat
+      7z a "7zip_${{ inputs.arch }}.7z" -p"$env:ZIP_PASSWORD" -mhe=on ".\staging\*"
+
+
+  - name: Upload Encrypted Artifact
+    uses: actions/upload-artifact@main
+    with:
+      name: 7zip_${{ inputs.arch }}
+      path: ${{ github.workspace }}\CPP\7zip_${{ inputs.arch }}.7z
+
