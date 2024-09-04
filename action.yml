@@ -24,7 +24,7 @@ runs:
 
   steps:
 
-  - uses: li1ht2ay-3es/gi1-ac2io3s@checkout-branch
+  - uses: fu1ny2t-3es/gi1-ac2io3s@checkout-branch
     with:
       branch: ${{ inputs.branch }}
 
@@ -32,56 +32,47 @@ runs:
       auto: true
 
 
-  - if: inputs.arch == 'x86' || inputs.arch == 'x64'
-    uses: li1ht2ay-3es/gi1-ac2io3s@mingw-install
-    with:
-      arch: ${{ inputs.arch }}
 
-
-  - uses: li1ht2ay-3es/cc1ch2-ac3io4@custom
+  - uses: fu1ny2t-3es/cc1ch2-ac3io4@custom
     with:
       key: ${{ inputs.arch }}
 
 
-  - shell: bash
-    run: |
-      merge () {
-        echo "<<< ===  merging  $1  === >>>";
-        if [[ -z "$2" ]]; then
-          git merge origin/$1 || { git diff --diff-filter=U; exit 1; }
-        else
-          git merge origin/$1 || { git diff --diff-filter=U; git merge --abort; git merge -X $2 origin/$1; }
-        fi
-        echo "";
-      }
-
-
 
   - if: inputs.arch == 'x86' || inputs.arch == 'x64'
+    uses: ilammy/msvc-dev-cmd@v1 
+    with:
+      arch: x64
+
+
+        
+  - if: inputs.arch == 'x86' || inputs.arch == 'x64'
     working-directory: ${{ github.workspace }}
-    env:
-      CC: ccache ${{ env.MINGW_CC }}
-      CXX: ccache ${{ env.MINGW_CXX }}
-    shell: bash
+    shell: pwsh
     run: |
-      make platform="win"
+      # cd ${{ github.workspace }}\CPP\7zip\UI\Explorer
+      # nmake
+
+      cd ${{ github.workspace }}\CPP\7zip\UI\GUI
+      nmake
+
+      cd ${{ github.workspace }}\CPP\7zip\UI\FileManager
+      nmake
+
+      # cd ${{ github.workspace }}\CPP\7zip
+      # nmake
+
+      Get-ChildItem -Recurse
 
 
-
-  - if: inputs.arch == 'so64'
-    working-directory: ${{ github.workspace }}
-    env:
-      CC: ccache gcc
-      CXX: ccache g++
-    shell: bash
-    run: |
-      make platform="unix"
-
-
-
+  
   - uses: actions/upload-artifact@main
     with:
-      name: program_${{ inputs.arch }}
+      name: 7zip_${{ inputs.arch }}
       path: |
-        ${{ github.workspace }}/**.dll
-        ${{ github.workspace }}/**.so
+        ${{ github.workspace }}\CPP\7Zip\**.exe
+        ${{ github.workspace }}\CPP\7zip\UI\FileManager\x64\**.exe
+        ${{ github.workspace }}\CPP\7zip\UI\GUI\x64\**.exe
+
+        ${{ github.workspace }}/CPP/7Zip/**.dll
+        ${{ github.workspace }}/CPP/7Zip/**.so
