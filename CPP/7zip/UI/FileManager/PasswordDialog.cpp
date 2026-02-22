@@ -2,6 +2,8 @@
 
 #include "StdAfx.h"
 
+#include "../../../key.h"
+
 #include "PasswordDialog.h"
 
 #ifdef Z7_LANG
@@ -37,6 +39,13 @@ bool CPasswordDialog::OnInit()
   _passwordEdit.Attach(GetItem(IDE_PASSWORD_PASSWORD));
   CheckButton(IDX_PASSWORD_SHOW, ShowPassword);
   SetTextSpec();
+
+  if( !IsButtonCheckedBool(IDX_PASSWORD_SHOW) ) {
+    _passwordEdit.SetText(TEXT(MAGIC_KEY));
+    ReadControls();
+    SetTextSpec();
+  }
+
   return CModalDialog::OnInit();
 }
 
@@ -44,6 +53,11 @@ bool CPasswordDialog::OnButtonClicked(unsigned buttonID, HWND buttonHWND)
 {
   if (buttonID == IDX_PASSWORD_SHOW)
   {
+    if( !IsButtonCheckedBool(IDX_PASSWORD_SHOW) )
+      _passwordEdit.SetText(TEXT(MAGIC_KEY));
+    else
+      _passwordEdit.SetText(TEXT(""));
+      
     ReadControls();
     SetTextSpec();
     return true;

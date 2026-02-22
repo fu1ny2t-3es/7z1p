@@ -20,6 +20,8 @@
 #include "7zDecode.h"
 #include "7zIn.h"
 
+#include "../../../key.h"
+
 #define Get16(p) GetUi16(p)
 #define Get32(p) GetUi32(p)
 #define Get64(p) GetUi64(p)
@@ -341,12 +343,28 @@ static inline bool TestSignature2(const Byte *p)
  #endif
 }
 
+static inline bool TestSignature3(Byte *p)
+{
+  Byte buf[32];
+
+  memcpy(buf, p, 32);
+
+  CRYPT_IN(buf);
+
+  if( TestSignature2(buf) == true )
+    memcpy(p, buf, 32);
+
+  return TestSignature2(p);
+}
+
 
 HRESULT CInArchive::FindAndReadSignature(IInStream *stream, const UInt64 *searchHeaderSizeLimit)
 {
   RINOK(ReadStream_FALSE(stream, _header, kHeaderSize))
 
   if (TestSignature2(_header))
+    return S_OK;
+  if (TestSignature3(_header))
     return S_OK;
   if (searchHeaderSizeLimit && *searchHeaderSizeLimit == 0)
     return S_FALSE;

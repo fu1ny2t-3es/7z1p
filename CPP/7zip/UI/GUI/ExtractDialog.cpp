@@ -2,6 +2,8 @@
 
 #include "StdAfx.h"
 
+#include "../../../key.h"
+
 #include "../../../Common/StringConvert.h"
 #include "../../../Common/Wildcard.h"
 
@@ -182,6 +184,12 @@ bool CExtractDialog::OnInit()
   CheckButton_TwoBools(IDX_EXTRACT_ELIM_DUP,    ElimDup,    _info.ElimDup);
   
   CheckButton(IDX_PASSWORD_SHOW, _info.ShowPassword.Val);
+
+  if( !IsShowPasswordChecked() )
+    _passwordControl.SetText(TEXT(MAGIC_KEY));
+  else
+    _passwordControl.SetText(TEXT(""));
+
   UpdatePasswordControl();
 
   #endif
@@ -265,6 +273,11 @@ bool CExtractDialog::OnButtonClicked(unsigned buttonID, HWND buttonHWND)
       return true;
     case IDX_PASSWORD_SHOW:
     {
+      if( !IsShowPasswordChecked() )
+        _passwordControl.SetText(TEXT(MAGIC_KEY));
+      else
+        _passwordControl.SetText(TEXT(""));
+
       UpdatePasswordControl();
       return true;
     }

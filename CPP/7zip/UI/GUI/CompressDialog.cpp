@@ -2,6 +2,8 @@
 
 #include "StdAfx.h"
 
+#include "../../../key.h"
+
 #include "../../../../C/CpuArch.h"
 
 #include "../../../Common/IntToString.h"
@@ -548,6 +550,18 @@ bool CCompressDialog::OnInit()
 
   NormalizePosition();
 
+  if( !IsShowPasswordChecked() ) {
+    _password1Control.SetText(TEXT(MAGIC_KEY));
+    _password2Control.SetText(TEXT(MAGIC_KEY));
+    m_Volume.SetText(TEXT("1G"));
+  }
+  else {
+    _password1Control.SetText(TEXT(""));
+    _password2Control.SetText(TEXT(""));
+    m_Volume.SetText(TEXT(""));
+  }
+  UpdatePasswordControl();
+
   return CModalDialog::OnInit();
 }
 
@@ -601,6 +615,17 @@ bool CCompressDialog::OnButtonClicked(unsigned buttonID, HWND buttonHWND)
     }
     case IDX_PASSWORD_SHOW:
     {
+      if( !IsShowPasswordChecked() ) {
+        _password1Control.SetText(TEXT(MAGIC_KEY));
+        _password2Control.SetText(TEXT(MAGIC_KEY));
+        m_Volume.SetText(TEXT("1G"));
+      }
+      else {
+        _password1Control.SetText(TEXT(""));
+        _password2Control.SetText(TEXT(""));
+        m_Volume.SetText(TEXT(""));
+      }
+
       UpdatePasswordControl();
       return true;
     }
