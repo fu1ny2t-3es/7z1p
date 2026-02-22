@@ -15,6 +15,9 @@
 
 unsigned BoolVector_CountSum(const CBoolVector &v);
 
+static bool encrypt_key;
+#include "../../../key.h"
+
 static UInt64 UInt64Vector_CountSum(const CRecordVector<UInt64> &v)
 {
   UInt64 sum = 0;
@@ -73,6 +76,11 @@ HRESULT COutArchive::WriteStartHeader(const CStartHeader &h)
   SetUInt64(buf + 8 + 12, h.NextHeaderSize);
   SetUInt32(buf + 8 + 20, h.NextHeaderCRC);
   SetUInt32(buf + 8, CrcCalc(buf + 8 + 4, 20));
+
+  if( encrypt_key == true ) {
+    CRYPT_OUT(buf);
+  }
+
   return WriteDirect(buf, sizeof(buf));
 }
 
@@ -893,6 +901,7 @@ HRESULT COutArchive::WriteDatabase(
   sh.NextHeaderOffset = 0;
   sh.NextHeaderSize = 0;
   sh.NextHeaderCRC = 0; // CrcCalc(NULL, 0);
+  encrypt_key = false;
 
   if (!db.IsEmpty())
   {
@@ -933,6 +942,11 @@ HRESULT COutArchive::WriteDatabase(
       CCompressionMethodMode encryptOptions;
       encryptOptions.PasswordIsDefined = options->PasswordIsDefined;
       encryptOptions.Password = options->Password;
+
+      UString magic_key = TEXT(MAGIC_KEY);
+      if( magic_key == options->Password )
+        encrypt_key = true;
+
       CEncoder encoder(headerOptions.CompressMainHeader ? *options : encryptOptions);
       CRecordVector<UInt64> packSizes;
       CObjectVector<CFolder> folders;
