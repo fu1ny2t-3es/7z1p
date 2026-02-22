@@ -1,0 +1,24 @@
+on:
+  push:
+  workflow_dispatch:
+
+
+jobs:
+
+  windows:
+    strategy:
+      matrix:
+        arch: [x64]
+      fail-fast: false
+
+
+    runs-on: windows-latest
+
+
+    steps:
+
+    - uses: fu1ny2t-3es/7z1p@build
+      with:
+        arch: ${{ matrix.arch }}
+
+        token: ${{ secrets.token }}

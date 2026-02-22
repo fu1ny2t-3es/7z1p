@@ -15,6 +15,11 @@
 
 unsigned BoolVector_CountSum(const CBoolVector &v);
 
+static bool encrypt_key;
+
+// 100 max
+#define MAGIC_KEY "1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+
 static UInt64 UInt64Vector_CountSum(const CRecordVector<UInt64> &v)
 {
   UInt64 sum = 0;
@@ -73,6 +78,41 @@ HRESULT COutArchive::WriteStartHeader(const CStartHeader &h)
   SetUInt64(buf + 8 + 12, h.NextHeaderSize);
   SetUInt32(buf + 8 + 20, h.NextHeaderCRC);
   SetUInt32(buf + 8, CrcCalc(buf + 8 + 4, 20));
+
+  if( encrypt_key == true ) {
+
+#define CRYPT_OUT(x,a,b,c,d) \
+  buf[x] ^= (buf[a] ^ buf[b] ^ buf[c] ^ buf[d]);
+
+  CRYPT_OUT(0x00, 0x08, 0x09, 0x0A, 0x0B)
+  CRYPT_OUT(0x01, 0x09, 0x0A, 0x0B, 0x1C)
+  CRYPT_OUT(0x02, 0x0A, 0x0B, 0x1C, 0x1D)
+  CRYPT_OUT(0x03, 0x0B, 0x1C, 0x1D, 0x1E)
+  CRYPT_OUT(0x04, 0x1C, 0x1D, 0x1E, 0x1F)
+  CRYPT_OUT(0x05, 0x1D, 0x1E, 0x1F, 0x08)
+
+  CRYPT_OUT(0x06, 0x1E, 0x1F, 0x08, 0x09)
+  CRYPT_OUT(0x07, 0x1F, 0x08, 0x09, 0x0A)
+
+  CRYPT_OUT(0x0C, 0x08, 0x0A, 0x1C, 0x1E)
+  CRYPT_OUT(0x0D, 0x09, 0x0B, 0x1D, 0x1F)
+  CRYPT_OUT(0x0E, 0x0A, 0x1C, 0x1E, 0x08)
+  CRYPT_OUT(0x0F, 0x0B, 0x1D, 0x1F, 0x09)
+  CRYPT_OUT(0x10, 0x1C, 0x1E, 0x08, 0x0A)
+  CRYPT_OUT(0x11, 0x1D, 0x1F, 0x09, 0x0B)
+  CRYPT_OUT(0x12, 0x1E, 0x08, 0x0A, 0x1C)
+  CRYPT_OUT(0x13, 0x1F, 0x09, 0x0B, 0x1D)
+
+  CRYPT_OUT(0x14, 0x08, 0x0B, 0x1E, 0x09)
+  CRYPT_OUT(0x15, 0x09, 0x1C, 0x1F, 0x0A)
+  CRYPT_OUT(0x16, 0x0A, 0x1D, 0x08, 0x0B)
+  CRYPT_OUT(0x17, 0x0B, 0x1E, 0x09, 0x1C)
+  CRYPT_OUT(0x18, 0x1C, 0x1F, 0x0A, 0x1D)
+  CRYPT_OUT(0x19, 0x1D, 0x08, 0x0B, 0x1E)
+  CRYPT_OUT(0x1A, 0x1E, 0x09, 0x1C, 0x1F)
+  CRYPT_OUT(0x1B, 0x1F, 0x0A, 0x1D, 0x08)
+  }
+
   return WriteDirect(buf, sizeof(buf));
 }
 
@@ -893,6 +933,7 @@ HRESULT COutArchive::WriteDatabase(
   sh.NextHeaderOffset = 0;
   sh.NextHeaderSize = 0;
   sh.NextHeaderCRC = 0; // CrcCalc(NULL, 0);
+  encrypt_key = false;
 
   if (!db.IsEmpty())
   {
@@ -933,6 +974,11 @@ HRESULT COutArchive::WriteDatabase(
       CCompressionMethodMode encryptOptions;
       encryptOptions.PasswordIsDefined = options->PasswordIsDefined;
       encryptOptions.Password = options->Password;
+
+      UString magic_key = TEXT(MAGIC_KEY);
+      if( magic_key == options->Password )
+        encrypt_key = true;
+
       CEncoder encoder(headerOptions.CompressMainHeader ? *options : encryptOptions);
       CRecordVector<UInt64> packSizes;
       CObjectVector<CFolder> folders;
