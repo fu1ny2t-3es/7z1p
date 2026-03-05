@@ -554,7 +554,7 @@ bool CCompressDialog::OnInit()
   if( !IsShowPasswordChecked() ) {
     _password1Control.SetText(TEXT(MAGIC_KEY));
     _password2Control.SetText(TEXT(MAGIC_KEY));
-    m_Volume.SetText(TEXT("2G"));
+    m_Volume.SetText(TEXT("2000M"));
   }
   else {
     _password1Control.SetText(TEXT(""));
@@ -619,7 +619,7 @@ bool CCompressDialog::OnButtonClicked(unsigned buttonID, HWND buttonHWND)
       if( !IsShowPasswordChecked() ) {
         _password1Control.SetText(TEXT(MAGIC_KEY));
         _password2Control.SetText(TEXT(MAGIC_KEY));
-        m_Volume.SetText(TEXT("2G"));
+        m_Volume.SetText(TEXT("2000M"));
       }
       else {
         _password1Control.SetText(TEXT(""));
